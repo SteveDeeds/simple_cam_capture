@@ -1,0 +1,517 @@
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background-color: #1a1a1a;
+    color: #fff;
+    height: 100vh;
+    overflow: hidden;
+}
+
+.container {
+    display: flex;
+    height: calc(100vh - 60px);
+    padding: 20px;
+    gap: 20px;
+}
+
+/* Original Traffic Camera View - Left Section */
+.original-view {
+    flex: 0 0 50%;
+    display: flex;
+    flex-direction: column;
+    background: #2c2c2c;
+    border-radius: 8px;
+    overflow: hidden;
+}
+
+.original-image-container {
+    flex: 1;
+    position: relative;
+    background: #000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+#original-image {
+    width: 100%;
+    height: auto;
+    object-fit: contain;
+    display: none;
+}
+
+#original-image.loaded {
+    display: block;
+}
+
+.crop-overlay {
+    position: absolute;
+    border: 3px solid #ff6b00;
+    background: rgba(255, 107, 0, 0.2);
+    pointer-events: none;
+    z-index: 100;
+    display: none;
+}
+
+.loading {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    font-size: 1.5em;
+    color: #666;
+}
+
+.original-info {
+    background: rgba(0, 0, 0, 0.8);
+    padding: 20px;
+    border-top: 1px solid #444;
+}
+
+.original-info h2 {
+    color: #fff;
+    font-size: 1.3em;
+    margin-bottom: 8px;
+}
+
+.original-info p {
+    color: #ccc;
+    font-size: 0.9em;
+    margin: 3px 0;
+}
+
+/* Cropped Images - Middle Section */
+.crops-section {
+    flex: 0 0 20%;
+    background: #333;
+    border-radius: 8px;
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    overflow-y: auto;
+    max-height: 100%;
+}
+
+.crops-section h3 {
+    color: #fff;
+    margin-bottom: 20px;
+    text-align: center;
+    font-size: 1.1em;
+}
+
+.crop-stack {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+    flex: 1;
+}
+
+.crop-item {
+    background: #444;
+    border-radius: 6px;
+    padding: 15px;
+    text-align: center;
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+}
+
+.crop-item h4 {
+    color: #fff;
+    font-size: 0.9em;
+    margin-bottom: 10px;
+}
+
+.crop-item img {
+    max-width: 100%;
+    max-height: 100%;
+    object-fit: contain;
+    border: 2px solid #666;
+    border-radius: 4px;
+    flex: 1;
+}
+
+/* Review Controls - Right Section */
+.review-section {
+    flex: 0 0 30%;
+    background: #2c2c2c;
+    border-radius: 8px;
+    padding: 12px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.review-section h3 {
+    color: #fff;
+    font-size: 1.1em;
+    text-align: center;
+    margin-bottom: 5px;
+}
+
+.classification-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+    margin-bottom: 15px;
+}
+
+.classification-group {
+    background: #333;
+    padding: 8px;
+    border-radius: 6px;
+    border: 1px solid #444;
+}
+
+.classification-group h4 {
+    color: #fff;
+    font-size: 0.8em;
+    margin-bottom: 6px;
+    border-bottom: 1px solid #555;
+    padding-bottom: 3px;
+}
+
+.classification-options h4,
+.notes-section h4 {
+    color: #fff;
+    font-size: 1em;
+    margin-bottom: 8px;
+}
+
+#general-classification {
+    width: 100%;
+    background: #444;
+    border: 2px solid #666;
+    border-radius: 6px;
+    padding: 6px;
+    color: #fff;
+    font-family: inherit;
+    font-size: 0.8em;
+}
+
+#general-classification:focus {
+    outline: none;
+    border-color: #3498db;
+}
+
+#general-classification::placeholder {
+    color: #888;
+}
+
+.radio-group {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.radio-option {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    cursor: pointer;
+    padding: 6px 8px;
+    border-radius: 4px;
+    transition: background-color 0.2s ease;
+}
+
+.radio-option:hover {
+    background-color: #3a3a3a;
+}
+
+.radio-option input[type="radio"] {
+    display: none;
+}
+
+.radio-custom {
+    width: 14px;
+    height: 14px;
+    border: 2px solid #666;
+    border-radius: 50%;
+    position: relative;
+    transition: border-color 0.2s ease;
+    flex-shrink: 0;
+}
+
+.radio-option input[type="radio"]:checked + .radio-custom {
+    border-color: #3498db;
+}
+
+.radio-option input[type="radio"]:checked + .radio-custom::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 6px;
+    height: 6px;
+    background-color: #3498db;
+    border-radius: 50%;
+}
+
+.radio-option span:not(.radio-custom) {
+    color: #fff;
+    font-size: 0.8em;
+}
+
+
+
+#notes {
+    width: 100%;
+    background: #444;
+    border: 2px solid #666;
+    border-radius: 6px;
+    padding: 8px;
+    color: #fff;
+    font-family: inherit;
+    font-size: 0.8em;
+    resize: vertical;
+    min-height: 60px;
+}
+
+#notes:focus {
+    outline: none;
+    border-color: #3498db;
+}
+
+#notes::placeholder {
+    color: #888;
+}
+
+.action-buttons {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.primary-button {
+    background: linear-gradient(45deg, #3498db, #2980b9);
+    border: 2px solid #3498db;
+    color: white;
+    padding: 10px 15px;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    font-size: 1em;
+    font-weight: 600;
+}
+
+.primary-button:hover {
+    background: linear-gradient(45deg, #2980b9, #3498db);
+    border-color: #2980b9;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(52, 152, 219, 0.3);
+}
+
+.secondary-button {
+    background: #555;
+    border: 2px solid #777;
+    color: white;
+    padding: 8px 15px;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    font-size: 0.8em;
+    font-weight: 500;
+}
+
+.secondary-button:hover {
+    background: #666;
+    border-color: #888;
+    transform: translateY(-1px);
+}
+
+.button-text {
+    font-size: 1em;
+    font-weight: 600;
+    margin-bottom: 4px;
+}
+
+.button-subtitle {
+    font-size: 0.8em;
+    opacity: 0.8;
+}
+
+.navigation-info {
+    text-align: center;
+    margin-top: auto;
+}
+
+.navigation-info p {
+    color: #ccc;
+    font-size: 0.8em;
+    margin: 3px 0;
+}
+
+/* Navigation Bar */
+.nav-bar {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    background: #2c2c2c;
+    border-top: 1px solid #444;
+    padding: 15px;
+    display: flex;
+    justify-content: center;
+    gap: 30px;
+    z-index: 1000;
+}
+
+.nav-link {
+    color: #ccc;
+    text-decoration: none;
+    padding: 8px 16px;
+    border-radius: 6px;
+    transition: all 0.3s ease;
+    font-size: 0.9em;
+}
+
+.nav-link:hover {
+    color: #fff;
+    background: #3a3a3a;
+}
+
+.nav-link.active {
+    color: #3498db;
+    background: #1a1a1a;
+}
+
+/* Custom scrollbar for crops section */
+.crops-section::-webkit-scrollbar {
+    width: 8px;
+}
+
+.crops-section::-webkit-scrollbar-track {
+    background: #2c2c2c;
+    border-radius: 4px;
+}
+
+.crops-section::-webkit-scrollbar-thumb {
+    background: #555;
+    border-radius: 4px;
+}
+
+.crops-section::-webkit-scrollbar-thumb:hover {
+    background: #666;
+}
+
+/* Checkbox options styles */
+.checkbox-group {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.checkbox-option {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    cursor: pointer;
+    padding: 6px 8px;
+    border-radius: 4px;
+    transition: background-color 0.2s ease;
+}
+
+.checkbox-option:hover {
+    background-color: #3a3a3a;
+}
+
+.checkbox-option input[type="checkbox"] {
+    display: none;
+}
+
+.checkbox-custom {
+    width: 14px;
+    height: 14px;
+    border: 2px solid #666;
+    border-radius: 3px;
+    position: relative;
+    transition: border-color 0.2s ease;
+    flex-shrink: 0;
+}
+
+.checkbox-option input[type="checkbox"]:checked + .checkbox-custom {
+    border-color: #3498db;
+    background-color: #3498db;
+}
+
+.checkbox-option input[type="checkbox"]:checked + .checkbox-custom::after {
+    content: '✓';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    color: white;
+    font-size: 10px;
+    font-weight: bold;
+}
+
+.checkbox-option span:not(.checkbox-custom) {
+    color: #fff;
+    font-size: 0.8em;
+}
+
+/* Responsive Design */
+@media (max-width: 1200px) {
+    .container {
+        flex-direction: column;
+        height: calc(100vh - 120px);
+        overflow-y: auto;
+    }
+    
+    .original-view {
+        flex: 0 0 300px;
+    }
+    
+    .crops-section {
+        flex: none;
+    }
+    
+    .crop-stack {
+        flex-direction: row;
+        gap: 10px;
+    }
+    
+    .review-section {
+        flex: none;
+    }
+}
+
+@media (max-width: 768px) {
+    .container {
+        padding: 10px;
+        gap: 10px;
+    }
+    
+    .crop-stack {
+        flex-direction: column;
+    }
+    
+    .nav-bar {
+        gap: 15px;
+    }
+    
+    .nav-link {
+        font-size: 0.8em;
+        padding: 6px 12px;
+    }
+}
+
+/* Loading animation */
+.loading {
+    animation: pulse 1.5s infinite;
+}
+
+@keyframes pulse {
+    0%, 100% { opacity: 0.5; }
+    50% { opacity: 1; }
+}

@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Traffic Camera Dashboard</title>
+    <link rel="stylesheet" href="dashboard.css">
+</head>
+<body>
+    <div class="dashboard-container">
+        <header class="dashboard-header">
+            <h1>🚗 Traffic Camera Dashboard</h1>
+            <div class="header-stats">
+                <div class="stat-card">
+                    <span class="stat-number" id="total-cameras">-</span>
+                    <span class="stat-label">Cameras</span>
+                </div>
+                <div class="stat-card">
+                    <span class="stat-number" id="total-images">-</span>
+                    <span class="stat-label">Images</span>
+                </div>
+                <div class="stat-card">
+                    <span class="stat-number" id="total-views">-</span>
+                    <span class="stat-label">Views</span>
+                </div>
+                <div class="stat-card">
+                    <span class="stat-number" id="total-crops">-</span>
+                    <span class="stat-label">Crops</span>
+                </div>
+            </div>
+            <nav class="dashboard-nav">
+                <a href="index.html" class="nav-button">📷 Camera Viewer</a>
+                <a href="/dashboard" class="nav-button">🌱 Crop Dashboard</a>
+                <a href="crop-review.html" class="nav-button">🔍 Crop Review</a>
+                <button id="refresh-dashboard" class="nav-button">🔄 Refresh</button>
+            </nav>
+        </header>
+
+        <main class="dashboard-main">
+            <div class="loading" id="dashboard-loading">Loading cameras...</div>
+            <div class="cameras-grid" id="cameras-grid">
+                <!-- Camera cards will be populated here -->
+            </div>
+        </main>
+    </div>
+
+    <script src="dashboard.js"></script>
+</body>
+</html>

@@ -1,0 +1,68 @@
+{
+  "cameras": [
+    {
+      "name": "98th_Ave_116th_St",
+      "url": "https://its.kirklandwa.gov/CamView/98thAve116thStPTZ.jpg"
+    },
+    {
+      "name": "132nd_St_108th_Ave",
+      "url": "https://its.kirklandwa.gov/CamView/132ndSt108thAvePTZ.jpg"
+    },
+    {
+      "name": "124th_St_116th_Ave",
+      "url": "https://its.kirklandwa.gov/CamView/124thSt116thAvePTZ.jpg"
+    },
+    {
+      "name": "124th_Ave_116th_St",
+      "url": "https://its.kirklandwa.gov/CamView/124thAve116thStPTZ.jpg"
+    },
+    {
+      "name": "100th_Ave_145th_St",
+      "url": "https://its.kirklandwa.gov/CamView/100thAve145thStPTZ.jpg"
+    },
+    {
+      "name": "132nd_St_106th_Pl_JHS",
+      "url": "https://its.kirklandwa.gov/CamView/132ndSt106thPlJHSPTZ.jpg"
+    },
+    {
+      "name": "100th_Ave_Juanita_Woodinville_Way",
+      "url": "https://its.kirklandwa.gov/CamView/100thAveJuanitaWoodinvilleWayPTZ.jpg"
+    },
+    {
+      "name": "100th_Ave_132nd_St",
+      "url": "https://its.kirklandwa.gov/CamView/100thAve132ndStPTZ.jpg"
+    },
+    {
+      "name": "6th_St_Kirkland_Way",
+      "url": "https://its.kirklandwa.gov/CamView/6thStKirklandWayPTZ.jpg"
+    },
+    {
+      "name": "Juanita_Dr_141st_St",
+      "url": "https://its.kirklandwa.gov/CamView/JuanitaDr141stStPTZ.jpg"
+    },
+    {
+      "name": "Redmond_Cam_28",
+      "url": "https://gis.redmond.gov/traffic/tcimages/28.jpg"
+    },
+    {
+      "name": "Redmond_Cam_38",
+      "url": "https://gis.redmond.gov/traffic/tcimages/38.jpg?dummy=1625604464922"
+    },
+    {
+      "name": "Redmond_Cam_29",
+      "url": "https://gis.redmond.gov/traffic/tcimages/29.jpg?dummy=1625604526327"
+    },
+    {
+      "name": "Juanita_Dr_122nd_St",
+      "url": "https://its.kirklandwa.gov/CamView/JuanitaDr122ndStPTZ.jpg"
+    },
+    {
+      "name": "Market_St_Forbes_Creek_Dr",
+      "url": "https://its.kirklandwa.gov/CamView/MarketStForbesCreekDrPTZ.jpg"
+    },
+    {
+      "name": "100th_Ave_124th_St_Ema",
+      "url": "https://its.kirklandwa.gov/CamView/100thAve124thStEmaPTZ.jpg"
+    }
+  ]
+}

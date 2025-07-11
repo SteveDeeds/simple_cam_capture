@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Crop Review - Traffic Camera System</title>
+    <link rel="stylesheet" href="crop-review.css">
+</head>
+<body>
+    <div class="container">
+        <!-- Original Traffic Camera View -->
+        <div class="original-view">
+            <div class="original-image-container">
+                <img id="original-image" src="" alt="Original Traffic Camera Image">
+                <div class="crop-overlay" id="crop-overlay"></div>
+                <div class="loading" id="loading">Loading...</div>
+            </div>
+            <div class="original-info">
+                <h2 id="camera-name">Camera Name</h2>
+                <p id="image-details">Image details</p>
+                <p id="crop-info">Crop details</p>
+            </div>
+        </div>
+
+        <!-- Cropped Images -->
+        <div class="crops-section">
+            <h3>Crop Analysis</h3>
+            <div class="crop-stack">
+                <div class="crop-item">
+                    <h4>Original Crop</h4>
+                    <img id="crop-original" src="" alt="Original Crop">
+                </div>
+                <div class="crop-item">
+                    <h4>Enhanced Crop</h4>
+                    <img id="crop-enhanced" src="" alt="Enhanced Crop">
+                </div>
+                <div class="crop-item">
+                    <h4>Filtered Crop</h4>
+                    <img id="crop-filtered" src="" alt="Filtered Crop">
+                </div>
+            </div>
+        </div>
+
+        <!-- Review Controls -->
+        <div class="review-section">
+            <h3>Review & Classification</h3>
+            
+            <div class="classification-grid">
+                <!-- Is Jonathan -->
+                <div class="classification-group">
+                    <h4>Is Jonathan?</h4>
+                    <div class="radio-group">
+                        <label class="radio-option">
+                            <input type="radio" name="is_jonathan" value="could be">
+                            <span class="radio-custom"></span>
+                            Could Be
+                        </label>
+                        <label class="radio-option">
+                            <input type="radio" name="is_jonathan" value="can't tell">
+                            <span class="radio-custom"></span>
+                            Can't Tell
+                        </label>
+                        <label class="radio-option">
+                            <input type="radio" name="is_jonathan" value="no">
+                            <span class="radio-custom"></span>
+                            No
+                        </label>
+                    </div>
+                </div>
+
+                <!-- Activities -->
+                <div class="classification-group">
+                    <h4>Activities</h4>
+                    <div class="checkbox-group">
+                        <label class="checkbox-option">
+                            <input type="checkbox" name="activities" value="riding a bike">
+                            <span class="checkbox-custom"></span>
+                            Riding a bike
+                        </label>
+                        <label class="checkbox-option">
+                            <input type="checkbox" name="activities" value="waiting for a bus">
+                            <span class="checkbox-custom"></span>
+                            Waiting for a bus
+                        </label>
+                        <label class="checkbox-option">
+                            <input type="checkbox" name="activities" value="working">
+                            <span class="checkbox-custom"></span>
+                            Working
+                        </label>
+                        <label class="checkbox-option">
+                            <input type="checkbox" name="activities" value="walking with someone">
+                            <span class="checkbox-custom"></span>
+                            Walking with someone
+                        </label>
+                        <label class="checkbox-option">
+                            <input type="checkbox" name="activities" value="walking a dog">
+                            <span class="checkbox-custom"></span>
+                            Walking a dog
+                        </label>
+                        <label class="checkbox-option">
+                            <input type="checkbox" name="activities" value="wearing a backpack">
+                            <span class="checkbox-custom"></span>
+                            Wearing a backpack
+                        </label>
+                    </div>
+                </div>
+
+                <!-- Top Clothing -->
+                <div class="classification-group">
+                    <h4>Top Clothing?</h4>
+                    <div class="radio-group">
+                        <label class="radio-option">
+                            <input type="radio" name="top_clothing" value="long sleeves">
+                            <span class="radio-custom"></span>
+                            Long Sleeves
+                        </label>
+                        <label class="radio-option">
+                            <input type="radio" name="top_clothing" value="short sleeves">
+                            <span class="radio-custom"></span>
+                            Short Sleeves
+                        </label>
+                        <label class="radio-option">
+                            <input type="radio" name="top_clothing" value="can't tell">
+                            <span class="radio-custom"></span>
+                            Can't Tell
+                        </label>
+                    </div>
+                </div>
+
+                <!-- General Classification section removed - deprecated -->
+            </div>
+
+            <div class="notes-section">
+                <h4>Notes</h4>
+                <textarea id="notes" placeholder="Add any additional notes about this crop..." rows="4"></textarea>
+            </div>
+
+            <div class="action-buttons">
+                <button id="save-next-btn" class="primary-button">
+                    <span class="button-text">Save & Next</span>
+                    <span class="button-subtitle">[enter]</span>
+                </button>
+                <button id="skip-btn" class="secondary-button">
+                    Skip
+                </button>
+                <button id="prev-crop-btn" class="secondary-button">
+                    Previous Crop
+                </button>
+            </div>
+
+            <div class="navigation-info">
+                <p id="crop-counter">Loading...</p>
+                <p id="progress-info">Reviewing crops</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Navigation Bar -->
+    <div class="nav-bar">
+        <a href="index.html" class="nav-link">📷 Camera Viewer</a>
+        <a href="dashboard.html" class="nav-link">📊 Dashboard</a>
+        <a href="/dashboard" class="nav-link">🌱 Crop Dashboard</a>
+        <a href="crop-review.html" class="nav-link active">🔍 Crop Review</a>
+    </div>
+
+    <script src="crop-review.js"></script>
+</body>
+</html>

@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Crop Dashboard</title>
+    <link rel="stylesheet" href="crop-dashboard.css">
+</head>
+<body>
+    <div class="dashboard-container">
+        <header class="dashboard-header">
+            <h1>Crop Dashboard</h1>
+            <nav>
+                <a href="/">Main View</a>
+                <a href="/crop-review">Review Crops</a>
+            </nav>
+        </header>
+
+        <!-- Statistics Section -->
+        <section class="stats-section">
+            <div class="stat-card">
+                <h3>Total Crops</h3>
+                <div class="stat-number" id="total-crops">-</div>
+            </div>
+            <div class="stat-card">
+                <h3>Unreviewed</h3>
+                <div class="stat-number" id="unreviewed-crops">-</div>
+            </div>
+            <div class="stat-card">
+                <h3>Classified</h3>
+                <div class="stat-number" id="classified-crops">-</div>
+            </div>
+            <div class="stat-card">
+                <h3>Reviewed %</h3>
+                <div class="stat-number" id="reviewed-percentage">-</div>
+            </div>
+        </section>
+
+        <!-- Filter Section -->
+        <section class="filter-section">
+            <h2>Filter Crops</h2>
+            <div class="filter-controls">
+                <div class="filter-group">
+                    <label for="status-filter">Status:</label>
+                    <select id="status-filter">
+                        <option value="all">All Crops</option>
+                        <option value="unreviewed">Unreviewed</option>
+                        <option value="reviewed">Reviewed</option>
+                        <option value="classified">Classified</option>
+                    </select>
+                </div>
+
+                <div class="filter-group">
+                    <label for="jonathan-filter">Jonathan:</label>
+                    <select id="jonathan-filter">
+                        <option value="all">All</option>
+                        <option value="could be">Could Be</option>
+                        <option value="can't tell">Can't Tell</option>
+                        <option value="no">No</option>
+                    </select>
+                </div>
+
+                <div class="filter-group">
+                    <label for="activity-filter">Activity:</label>
+                    <select id="activity-filter">
+                        <option value="all">All</option>
+                        <option value="waiting for a bus">Waiting for Bus</option>
+                        <option value="riding a bike">Riding Bike</option>
+                        <option value="working">Working</option>
+                    </select>
+                </div>
+
+                <div class="filter-group">
+                    <label for="clothing-filter">Top Clothing:</label>
+                    <select id="clothing-filter">
+                        <option value="all">All</option>
+                        <option value="long sleeves">Long Sleeves</option>
+                        <option value="short sleeves">Short Sleeves</option>
+                        <option value="can't tell">Can't Tell</option>
+                    </select>
+                </div>
+
+                <button id="apply-filters" class="btn btn-primary">Apply Filters</button>
+                <button id="reset-filters" class="btn btn-secondary">Reset</button>
+            </div>
+        </section>
+
+        <!-- Results Section -->
+        <section class="results-section">
+            <div class="results-header">
+                <h2>Results</h2>
+                <div class="results-count">
+                    Showing <span id="showing-count">0</span> of <span id="total-count">0</span> crops
+                </div>
+            </div>
+
+            <div id="loading" class="loading" style="display: none;">Loading...</div>
+            
+            <div class="crops-grid" id="crops-grid">
+                <!-- Crop cards will be populated here -->
+            </div>
+
+            <div class="pagination">
+                <button id="prev-page" class="btn btn-secondary" disabled>Previous</button>
+                <span class="page-info">
+                    Page <span id="current-page">1</span> of <span id="total-pages">1</span>
+                </span>
+                <button id="next-page" class="btn btn-secondary" disabled>Next</button>
+            </div>
+        </section>
+    </div>
+
+    <script src="crop-dashboard.js"></script>
+</body>
+</html>
