@@ -63,6 +63,58 @@
     {
       "name": "100th_Ave_124th_St_Ema",
       "url": "https://its.kirklandwa.gov/CamView/100thAve124thStEmaPTZ.jpg"
+    },
+    {
+      "name": "Redmond_Cam_26",
+      "url": "https://gis.redmond.gov/traffic/tcimages/26.jpg"
+    },
+    {
+      "name": "Redmond_Cam_25",
+      "url": "https://gis.redmond.gov/traffic/tcimages/25.jpg"
+    },
+    {
+      "name": "Redmond_Cam_24",
+      "url": "https://gis.redmond.gov/traffic/tcimages/24.jpg"
+    },
+    {
+      "name": "Redmond_Cam_23",
+      "url": "https://gis.redmond.gov/traffic/tcimages/23.jpg"
+    },
+    {
+      "name": "Redmond_Cam_22",
+      "url": "https://gis.redmond.gov/traffic/tcimages/22.jpg"
+    },
+    {
+      "name": "Redmond_Cam_20",
+      "url": "https://gis.redmond.gov/traffic/tcimages/20.jpg"
+    },
+    {
+      "name": "Redmond_Cam_19",
+      "url": "https://gis.redmond.gov/traffic/tcimages/19.jpg"
+    },
+    {
+      "name": "Redmond_Cam_18",
+      "url": "https://gis.redmond.gov/traffic/tcimages/18.jpg"
+    },
+    {
+      "name": "Redmond_Cam_17",
+      "url": "https://gis.redmond.gov/traffic/tcimages/17.jpg"
+    },
+    {
+      "name": "Redmond_Cam_16",
+      "url": "https://gis.redmond.gov/traffic/tcimages/16.jpg"
+    },
+    {
+      "name": "Redmond_Cam_33",
+      "url": "https://gis.redmond.gov/traffic/tcimages/33.jpg"
+    },
+    {
+      "name": "Redmond_Cam_34",
+      "url": "https://gis.redmond.gov/traffic/tcimages/34.jpg"
+    },
+    {
+      "name": "Redmond_Cam_36",
+      "url": "https://gis.redmond.gov/traffic/tcimages/36.jpg"
     }
   ]
 }
