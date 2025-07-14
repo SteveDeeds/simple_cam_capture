@@ -1,6 +1,7 @@
 const express = require('express');
 const fs = require('fs');
 const path = require('path');
+const https = require('https');
 const sharp = require('sharp');
 const TrafficCameraDB = require('./database');
 
@@ -841,9 +842,29 @@ app.get('/api/constants', (req, res) => {
     });
 });
 
-// Start server
-app.listen(PORT, () => {
-    console.log(`Traffic Camera Viewer running on http://localhost:${PORT}`);
-});
+
+// --- Server Startup ---
+
+// Define paths for SSL certificates
+const keyPath = path.join(__dirname, 'certs', 'localhost+2-key.pem');
+const certPath = path.join(__dirname, 'certs', 'localhost+2.pem');
+
+if (fs.existsSync(keyPath) && fs.existsSync(certPath)) {
+    // HTTPS mode
+    const httpsOptions = {
+        key: fs.readFileSync(keyPath),
+        cert: fs.readFileSync(certPath)
+    };
+    https.createServer(httpsOptions, app).listen(PORT, () => {
+        console.log(`✅ Traffic Camera Viewer running in HTTPS mode on https://localhost:${PORT}`);
+    });
+} else {
+    // Fallback to HTTP mode
+    console.warn('⚠️  SSL certificates not found in /certs directory. Running in HTTP mode.');
+    console.warn('   To enable HTTPS, run `mkcert -install` and `mkcert localhost 127.0.0.1 ::1` in a "certs" folder.');
+    app.listen(PORT, () => {
+        console.log(`Traffic Camera Viewer running on http://localhost:${PORT}`);
+    });
+}
 
 module.exports = app;
