@@ -21,12 +21,12 @@ A modern web application to view and browse captured traffic camera images from 
 ## Installation
 
 1. Install Node.js dependencies:
-   ```bash
+```bash
    npm install
    ```
 
 2. For development with auto-restart:
-   ```bash
+```bash
    npm install -g nodemon
    ```
 
