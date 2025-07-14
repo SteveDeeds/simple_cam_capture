@@ -446,7 +446,8 @@ function clearZoomPreview() {
     document.getElementById('zoom-coordinates').textContent = 'Hover over image';
 }
 
-function handleImageClick(event) {
+async function handleImageClick(event) {
+    const mainImage = event.target; // Use the event target instead of querySelector
     if (!mainImage.complete || !mainImage.naturalWidth) return;
     
     const rect = mainImage.getBoundingClientRect();
@@ -484,7 +485,20 @@ function handleImageClick(event) {
     const relativeX = (mouseX - offsetX) / displayedWidth;
     const relativeY = (mouseY - offsetY) / displayedHeight;
     
-    // Store click coordinates
+    try {
+        // Check if click is within an existing crop area
+        const existingCrop = await checkForExistingCrop(relativeX, relativeY, displayedWidth, displayedHeight);
+        if (existingCrop) {
+            // Navigate to crop review for this existing crop
+            window.location.href = `/crop-review?crop=${existingCrop.id}`;
+            return;
+        }
+    } catch (error) {
+        console.error('Error checking for existing crop:', error);
+        // Continue with creating new crop if there's an error
+    }
+    
+    // No existing crop found, proceed with creating new crop
     const click = {
         x: relativeX,
         y: relativeY,
@@ -509,6 +523,46 @@ function handleImageClick(event) {
     instructionsElement.textContent = `Clicks recorded: ${clicks.length}`;
     
     console.log('Click recorded:', click);
+}
+
+// Function to check if a click is within an existing crop area
+async function checkForExistingCrop(clickX, clickY, displayedWidth, displayedHeight) {
+    try {
+        // Get current camera and image info
+        const currentCamera = cameras[currentCameraIndex];
+        const currentImage = currentCameraImages[currentImageIndex];
+        const filename = currentImage.path.split('/').pop();
+        
+        // Fetch existing crops for this image
+        const response = await fetch(`/api/images/${currentCamera.name}/${filename}/crops`);
+        if (!response.ok) {
+            return null;
+        }
+        
+        const data = await response.json();
+        const crops = data.crops || [];
+        
+        // Check if click is within any existing crop area
+        for (const crop of crops) {
+            // Convert crop coordinates from absolute pixels to relative coordinates
+            const cropLeft = crop.crop_left / crop.original_width;
+            const cropTop = crop.crop_top / crop.original_height;
+            const cropRight = (crop.crop_left + crop.crop_width) / crop.original_width;
+            const cropBottom = (crop.crop_top + crop.crop_height) / crop.original_height;
+            
+            // Check if click is within this crop's bounds
+            if (clickX >= cropLeft && clickX <= cropRight && 
+                clickY >= cropTop && clickY <= cropBottom) {
+                console.log('Click is within existing crop:', crop.id);
+                return crop;
+            }
+        }
+        
+        return null; // No existing crop found
+    } catch (error) {
+        console.error('Error checking for existing crops:', error);
+        return null;
+    }
 }
 
 function showClickFeedback(x, y) {
