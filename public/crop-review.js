@@ -276,46 +276,13 @@ function updateCropInfo() {
 async function loadExistingReview() {
     try {
         const response = await fetch(`/api/crops/${currentCrop.id}/review`);
-        if (response.ok) {
-            const review = await response.json();
-            
-            // Set is_jonathan field
-            if (review.is_jonathan) {
-                const radio = document.querySelector(`input[name="is_jonathan"][value="${review.is_jonathan}"]`);
-                if (radio) radio.checked = true;
-            }
-            
-            // Set activities checkboxes
-            if (review.activities) {
-                try {
-                    const activities = JSON.parse(review.activities);
-                    activities.forEach(activity => {
-                        const checkbox = document.querySelector(`input[name="activities"][value="${activity}"]`);
-                        if (checkbox) checkbox.checked = true;
-                    });
-                } catch (e) {
-                    console.warn('Could not parse activities JSON:', review.activities);
-                }
-            }
-            
-            // Set top_clothing field
-            if (review.top_clothing) {
-                const radio = document.querySelector(`input[name="top_clothing"][value="${review.top_clothing}"]`);
-                if (radio) radio.checked = true;
-            }
-            
-            // Set general classification (deprecated but kept for backward compatibility)
-            if (review.classification) {
-                const classificationInput = document.getElementById('general-classification');
-                if (classificationInput) {
-                    classificationInput.value = review.classification;
-                }
-            }
-            
-            // Set notes
-            if (review.notes) {
-                document.getElementById('notes').value = review.notes;
-            }
+        if (!response.ok) {
+            // This is expected if a review doesn't exist yet (404).
+            return;
+        }
+        const data = await response.json();
+        if (data.review) {
+            populateReviewForm(data.review);
         }
     } catch (error) {
         // 404 is expected when no review exists yet - don't log as error
