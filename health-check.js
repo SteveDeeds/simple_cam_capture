@@ -1,13 +1,15 @@
-const http = require('http');
+const https = require('https');
 
 const options = {
   host: 'localhost',
   port: process.env.PORT || 3000,
   path: '/api/stats',
-  timeout: 2000
+  timeout: 2000,
+  // Allow self-signed certificates for local development
+  rejectUnauthorized: false
 };
 
-const request = http.request(options, (res) => {
+const request = https.request(options, (res) => {
   if (res.statusCode === 200) {
     process.exit(0);
   } else {
