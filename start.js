@@ -19,7 +19,7 @@ function getLocalIP() {
 
 console.log('=== Traffic Camera Server Setup ===');
 console.log(`Local IP Address: ${getLocalIP()}`);
-console.log(`Server will run on: http://${getLocalIP()}:3000`);
+console.log(`Server will run on: https://${getLocalIP()}:3000`);
 console.log(`\nFor port forwarding, use:`);
 console.log(`- Internal IP: ${getLocalIP()}`);
 console.log(`- Internal Port: 3000`);
