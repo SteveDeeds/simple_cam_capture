@@ -3,6 +3,8 @@ import os
 import time
 import hashlib
 import requests
+import shutil
+import csv
 from datetime import datetime
 from pathlib import Path
 from PIL import Image
@@ -182,6 +184,34 @@ class CameraCapture:
         else:
             logger.warning(f"Save failed for {camera_name}, will try again next cycle")
             return False
+
+    def log_disk_space(self):
+        """Gets and logs the current free disk space to console and a CSV file."""
+        try:
+            # Determine the drive from the output directory's absolute path.
+            # This is more robust than hardcoding 'C:'.
+            drive = self.output_dir.resolve().anchor
+            if not drive:
+                drive = 'C:\\' if os.name == 'nt' else '/' # Fallback for safety
+
+            usage = shutil.disk_usage(drive)
+            free_gb = usage.free / (1024**3)
+
+            # Print to console log
+            logger.info(f"Disk space remaining on drive '{drive}': {free_gb:.2f} GB")
+
+            # Log to CSV file
+            log_file = Path('disk_space_log.csv')
+            file_exists = log_file.is_file()
+
+            with open(log_file, 'a', newline='', encoding='utf-8') as f:
+                writer = csv.writer(f)
+                if not file_exists:
+                    writer.writerow(['timestamp', 'free_space_gb'])  # Write header
+                timestamp = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+                writer.writerow([timestamp, f"{free_gb:.4f}"])
+        except Exception as e:
+            logger.error(f"Failed to get or log disk space: {e}")
     
     def capture_all_cameras(self):
         """Capture images from all cameras."""
@@ -207,6 +237,9 @@ class CameraCapture:
             try:
                 start_time = time.time()
                 self.capture_all_cameras()
+
+                # Log disk space after each capture cycle
+                self.log_disk_space()
                 
                 # Calculate sleep time to maintain interval
                 elapsed = time.time() - start_time
