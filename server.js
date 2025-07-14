@@ -743,6 +743,27 @@ app.post('/api/crops/:cropId/review', (req, res) => {
     }
 });
 
+// Delete a crop
+app.delete('/api/crops/:cropId', (req, res) => {
+    try {
+        const { cropId } = req.params;
+        const result = db.deleteCrop(parseInt(cropId));
+        
+        if (result.changes > 0) {
+            res.json({ 
+                success: true, 
+                cropId: parseInt(cropId),
+                message: 'Crop deleted successfully'
+            });
+        } else {
+            res.status(404).json({ error: 'Crop not found' });
+        }
+    } catch (error) {
+        console.error('Error deleting crop:', error);
+        res.status(500).json({ error: 'Failed to delete crop' });
+    }
+});
+
 // Dashboard API Endpoints
 
 // Get crop statistics for dashboard

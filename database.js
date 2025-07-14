@@ -184,6 +184,11 @@ class TrafficCameraDB {
                 WHERE id = ?
             `),
 
+            deleteCrop: this.db.prepare(`
+                DELETE FROM saved_crops
+                WHERE id = ?
+            `),
+
             // Sessions
             upsertSession: this.db.prepare(`
                 INSERT INTO viewer_sessions (session_id, ip_address, user_agent, last_seen, page_views)
@@ -340,6 +345,10 @@ class TrafficCameraDB {
 
     getSavedCropById(cropId) {
         return this.statements.getSavedCropById.get(cropId);
+    }
+
+    deleteCrop(cropId) {
+        return this.statements.deleteCrop.run(cropId);
     }
 
     recordSession(sessionId, ipAddress, userAgent) {

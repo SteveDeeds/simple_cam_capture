@@ -329,6 +329,24 @@ body {
     transform: translateY(-1px);
 }
 
+.delete-button {
+    background: #dc3545;
+    border: 2px solid #c82333;
+    color: white;
+    padding: 8px 15px;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    font-size: 0.8em;
+    font-weight: 500;
+}
+
+.delete-button:hover {
+    background: #c82333;
+    border-color: #bd2130;
+    transform: translateY(-1px);
+}
+
 .button-text {
     font-size: 1em;
     font-weight: 600;

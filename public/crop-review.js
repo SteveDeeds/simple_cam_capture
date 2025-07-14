@@ -39,6 +39,7 @@ function setupEventListeners() {
     document.getElementById('save-next-btn').addEventListener('click', saveAndNext);
     document.getElementById('skip-btn').addEventListener('click', skipCrop);
     document.getElementById('prev-crop-btn').addEventListener('click', previousCrop);
+    document.getElementById('delete-crop-btn').addEventListener('click', deleteCrop);
     
     // Auto-save when any classification changes
     const classificationNames = ['is_jonathan', 'top_clothing'];
@@ -721,4 +722,94 @@ function hslToRgb(h, s, l) {
     }
     
     return [Math.round(r * 255), Math.round(g * 255), Math.round(b * 255)];
+}
+
+async function deleteCrop() {
+    if (!crops[currentCropIndex]) {
+        console.error('No crop to delete');
+        return;
+    }
+    
+    const currentCrop = crops[currentCropIndex];
+    
+    // Show confirmation dialog
+    const confirmed = confirm(
+        `Are you sure you want to delete this crop?\n\n` +
+        `Camera: ${currentCrop.original_camera}\n` +
+        `Image: ${currentCrop.original_filename}\n` +
+        `Created: ${new Date(currentCrop.saved_at).toLocaleString()}\n\n` +
+        `This action cannot be undone.`
+    );
+    
+    if (!confirmed) {
+        return;
+    }
+    
+    try {
+        const response = await fetch(`/api/crops/${currentCrop.id}`, {
+            method: 'DELETE',
+            headers: {
+                'Content-Type': 'application/json'
+            }
+        });
+        
+        if (!response.ok) {
+            throw new Error(`Failed to delete crop: ${response.statusText}`);
+        }
+        
+        const result = await response.json();
+        console.log('Crop deleted successfully:', result);
+        
+        // Remove the crop from the local array
+        crops.splice(currentCropIndex, 1);
+        
+        // Navigate to the next crop or load more crops
+        if (crops.length === 0) {
+            // No more crops in current list, try to load next available crop from database
+            await loadNextAvailableCrop();
+        } else {
+            // Stay at the same index (which now points to the next crop)
+            // unless we were at the last crop, then go to the previous one
+            if (currentCropIndex >= crops.length) {
+                currentCropIndex = crops.length - 1;
+            }
+            // If we deleted a crop in the middle, currentCropIndex now points to the next crop
+            clearForm();
+            showCurrentCrop();
+        }
+        
+        updateCropCounter();
+        
+    } catch (error) {
+        console.error('Error deleting crop:', error);
+        alert('Failed to delete crop. Please try again.');
+    }
+}
+
+async function loadNextAvailableCrop() {
+    try {
+        // Try to load unreviewed crops from the database
+        const response = await fetch('/api/crops/unreviewed');
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        
+        const newCrops = await response.json();
+        
+        if (newCrops.length > 0) {
+            // Found more crops, load them and start at the first one
+            crops = newCrops;
+            currentCropIndex = 0;
+            clearForm();
+            showCurrentCrop();
+            updateCropCounter();
+        } else {
+            // No more crops available
+            showNoCrops();
+        }
+        
+    } catch (error) {
+        console.error('Error loading next available crop:', error);
+        showNoCrops();
+    }
 }
