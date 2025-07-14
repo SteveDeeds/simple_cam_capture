@@ -54,3 +54,4 @@ temp/
 # Backup files
 *.bak
 *.backup
+disk_space_log.csv
