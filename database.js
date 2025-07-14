@@ -442,6 +442,15 @@ class TrafficCameraDB {
                 this.db.exec('ALTER TABLE saved_crops ADD COLUMN migrated_from_json BOOLEAN DEFAULT FALSE');
             }
             
+            // Check if archived_path column exists in image_stats table
+            const imageStatsColumns = this.db.prepare("PRAGMA table_info(image_stats)").all();
+            const imageStatsColumnNames = imageStatsColumns.map(col => col.name);
+            
+            if (!imageStatsColumnNames.includes('archived_path')) {
+                console.log('🔄 Adding archived_path column to image_stats table...');
+                this.db.exec('ALTER TABLE image_stats ADD COLUMN archived_path TEXT');
+            }
+            
             // Check if crop_reviews table exists
             const tables = this.db.prepare("SELECT name FROM sqlite_master WHERE type='table' AND name='crop_reviews'").all();
             if (tables.length === 0) {
