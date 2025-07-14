@@ -17,10 +17,6 @@
       "url": "https://its.kirklandwa.gov/CamView/124thAve116thStPTZ.jpg"
     },
     {
-      "name": "100th_Ave_145th_St",
-      "url": "https://its.kirklandwa.gov/CamView/100thAve145thStPTZ.jpg"
-    },
-    {
       "name": "132nd_St_106th_Pl_JHS",
       "url": "https://its.kirklandwa.gov/CamView/132ndSt106thPlJHSPTZ.jpg"
     },
@@ -101,10 +97,6 @@
       "url": "https://gis.redmond.gov/traffic/tcimages/17.jpg"
     },
     {
-      "name": "Redmond_Cam_16",
-      "url": "https://gis.redmond.gov/traffic/tcimages/16.jpg"
-    },
-    {
       "name": "Redmond_Cam_33",
       "url": "https://gis.redmond.gov/traffic/tcimages/33.jpg"
     },
@@ -115,6 +107,18 @@
     {
       "name": "Redmond_Cam_36",
       "url": "https://gis.redmond.gov/traffic/tcimages/36.jpg"
-    }
+    },
+    {
+      "name": "Old_Redmond_Rd_148th_Ave_NE",
+      "url": "https://gis.redmond.gov/traffic/tcimages/54.jpg"
+    },
+    {
+      "name" : "NE_40th_St_&_Bel-Red_Rd",
+      "url": "https://gis.redmond.gov/traffic/tcimages/57.jpg"
+    },
+    {
+      "name" : "West_Lake_Samm_Pkwy_Bel-Red_Rd",
+      "url": "https://gis.redmond.gov/traffic/tcimages/10.jpg"
+    }    
   ]
 }
