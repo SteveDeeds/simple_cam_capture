@@ -28,6 +28,7 @@ async function initializeApp() {
             // Check for camera parameter in URL
             const urlParams = new URLSearchParams(window.location.search);
             const cameraParam = urlParams.get('camera');
+            const fileParam = urlParams.get('file');
             
             if (cameraParam) {
                 // Find the camera index
@@ -38,6 +39,17 @@ async function initializeApp() {
             }
             
             await loadCurrentCameraImages();
+            
+            // If file parameter is provided, find and navigate to that specific image
+            if (fileParam && currentCameraImages.length > 0) {
+                const imageIndex = currentCameraImages.findIndex(img => 
+                    img.filename === fileParam || img.path.endsWith(fileParam)
+                );
+                if (imageIndex !== -1) {
+                    currentImageIndex = imageIndex;
+                }
+            }
+            
             showCurrentImage();
         } else {
             showNoImages();

@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Traffic Camera Viewer</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="container">
+        <div class="image-section">
+            <div class="image-container">
+                <img id="main-image" src="" alt="Traffic Camera Image">
+                <div class="cursor-square" id="cursor-square"></div>
+                <div class="loading" id="loading">Loading...</div>
+                <div class="no-image" id="no-image" style="display: none;">No images available</div>
+            </div>
+            <div class="image-info">
+                <div class="instruction-text">Click on the people. Click next image when done.</div>
+                <h2 id="camera-name">Camera Name</h2>
+                <p id="image-details">Image details</p>
+                <p id="image-count">Loading...</p>
+            </div>
+        </div>
+        
+        <div class="controls-section">
+            <div class="zoom-preview">
+                <h3>Zoom Preview</h3>
+                <div class="zoom-container">
+                    <canvas id="zoom-canvas" width="200" height="200"></canvas>
+                    <div class="zoom-info">
+                        <p id="zoom-coordinates">Hover over image</p>
+                        <p id="zoom-instructions">Move mouse to preview area</p>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="navigation-controls">
+                <!-- Arrow key layout for image/camera navigation -->
+                <div class="arrow-keys-container">
+                    <div class="arrow-keys-grid">
+                        <!-- Left arrow - Previous Image -->
+                        <button id="prev-image-btn" class="arrow-key left-arrow" title="Previous Image (←)">
+                            <span class="arrow-symbol">←</span>
+                            <span class="arrow-label">Prev Image</span>
+                        </button>
+                        
+                        <!-- Up arrow - Previous Camera -->
+                        <button id="prev-camera-btn" class="arrow-key up-arrow" title="Previous Camera (↑)">
+                            <span class="arrow-symbol">↑</span>
+                            <span class="arrow-label">Prev Camera</span>
+                        </button>
+                        
+                        <!-- Down arrow - Next Camera -->
+                        <button id="next-camera-btn" class="arrow-key down-arrow" title="Next Camera (↓)">
+                            <span class="arrow-symbol">↓</span>
+                            <span class="arrow-label">Next Camera</span>
+                        </button>
+                        
+                        <!-- Right arrow - Next Image -->
+                        <button id="next-image-btn" class="arrow-key right-arrow" title="Next Image (→)">
+                            <span class="arrow-symbol">→</span>
+                            <span class="arrow-label">Next Image</span>
+                        </button>
+                    </div>
+                </div>
+                
+                <button id="next-unviewed-btn" class="nav-button priority-button">
+                    <span class="button-text">Next Unviewed</span>
+                    <span class="button-subtitle">[space]</span>
+                </button>
+            </div>
+            
+            <div class="camera-info">
+                <h3>Camera Details</h3>
+                <p id="current-camera-info">Select a camera</p>
+                <p id="total-cameras-info">Loading cameras...</p>
+            </div>
+            
+            <div class="quick-actions">
+                <h3>Quick Actions</h3>
+                <a href="dashboard.html" class="action-button" style="text-decoration: none; display: inline-block;">📊 Camera Dashboard</a>
+                <a href="crop-review2.html" class="action-button" style="text-decoration: none; display: inline-block;">🔍 Crop Review</a>
+                <button id="latest-btn" class="action-button">Go to Latest</button>
+                <button id="refresh-btn" class="action-button">Refresh</button>
+                <button id="fullscreen-btn" class="action-button">Fullscreen</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>

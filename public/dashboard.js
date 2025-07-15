@@ -148,7 +148,7 @@ function createCameraCard(camera) {
 
 function openCameraViewer(cameraName) {
     // Open the main camera viewer with the specific camera
-    const url = `index.html?camera=${encodeURIComponent(cameraName)}`;
+    const url = `camera-viewer.html?camera=${encodeURIComponent(cameraName)}`;
     window.location.href = url;
 }
 
