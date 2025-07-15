@@ -1,0 +1,13 @@
+# Database Cleaner Tool Requirements
+# This tool uses only Python standard library modules:
+# - sqlite3 (built-in)
+# - os (built-in)
+# - sys (built-in)
+# - argparse (built-in)
+# - json (built-in)
+# - pathlib (built-in)
+# - typing (built-in)
+# - collections (built-in)
+
+# No additional packages required!
+# The tool is designed to be self-contained and dependency-free.
