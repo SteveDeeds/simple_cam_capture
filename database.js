@@ -184,6 +184,21 @@ class TrafficCameraDB {
                 WHERE id = ?
             `),
 
+            deleteCropReview: this.db.prepare(`
+                DELETE FROM crop_reviews
+                WHERE crop_id = ?
+            `),
+
+            deletePositiveFactorsForReview: this.db.prepare(`
+                DELETE FROM crop_review_positive_factors
+                WHERE crop_review_id = ?
+            `),
+
+            deleteNegativeFactorsForReview: this.db.prepare(`
+                DELETE FROM crop_review_negative_factors
+                WHERE crop_review_id = ?
+            `),
+
             deleteCrop: this.db.prepare(`
                 DELETE FROM saved_crops
                 WHERE id = ?
@@ -226,6 +241,16 @@ class TrafficCameraDB {
                 LIMIT ?
             `),
 
+            getMostRecentCrop: this.db.prepare(`
+                SELECT sc.*, cr.notes, cr.reviewed_at
+                FROM saved_crops sc
+                LEFT JOIN crop_reviews cr ON sc.id = cr.crop_id
+                WHERE sc.crop_folder IS NOT NULL AND sc.crop_filename IS NOT NULL 
+                  AND sc.crop_folder NOT LIKE '%test_camera%' AND sc.crop_filename NOT LIKE '%test_image%'
+                ORDER BY sc.saved_at DESC
+                LIMIT 1
+            `),
+
             getReviewedCrops: this.db.prepare(`
                 SELECT sc.*, cr.notes, cr.reviewed_at
                 FROM saved_crops sc
@@ -240,10 +265,13 @@ class TrafficCameraDB {
                     COUNT(*) as total_crops,
                     COUNT(cr.crop_id) as total_reviews,
                     COUNT(CASE WHEN cr.crop_id IS NOT NULL THEN 1 END) as classified_crops,
-                    COUNT(CASE WHEN cr.crop_id IS NULL THEN 1 END) as never_reviewed,
+                    COUNT(CASE WHEN cr.crop_id IS NULL AND sc.crop_folder IS NOT NULL AND sc.crop_filename IS NOT NULL 
+                               AND sc.crop_folder NOT LIKE '%test_camera%' AND sc.crop_filename NOT LIKE '%test_image%' THEN 1 END) as never_reviewed,
                     0 as partial_reviews
                 FROM saved_crops sc
                 LEFT JOIN crop_reviews cr ON sc.id = cr.crop_id
+                WHERE sc.crop_folder IS NOT NULL AND sc.crop_filename IS NOT NULL 
+                  AND sc.crop_folder NOT LIKE '%test_camera%' AND sc.crop_filename NOT LIKE '%test_image%'
             `),
 
             // Basic prepared statements (dynamic ones are in methods below)
@@ -272,6 +300,85 @@ class TrafficCameraDB {
                 SELECT COUNT(*) as total
                 FROM saved_crops sc
                 LEFT JOIN crop_reviews cr ON sc.id = cr.crop_id
+            `),
+
+            // Factors table prepared statements
+            insertFactor: this.db.prepare(`
+                INSERT INTO factors (name, type, description, updated_at)
+                VALUES (?, ?, ?, CURRENT_TIMESTAMP)
+            `),
+
+            updateFactor: this.db.prepare(`
+                UPDATE factors 
+                SET name = ?, type = ?, description = ?, updated_at = CURRENT_TIMESTAMP
+                WHERE id = ?
+            `),
+
+            deleteFactor: this.db.prepare(`
+                DELETE FROM factors WHERE id = ?
+            `),
+
+            getFactorById: this.db.prepare(`
+                SELECT * FROM factors WHERE id = ?
+            `),
+
+            getFactorByName: this.db.prepare(`
+                SELECT * FROM factors WHERE name = ?
+            `),
+
+            getAllFactors: this.db.prepare(`
+                SELECT * FROM factors ORDER BY type, name
+            `),
+
+            getFactorsByType: this.db.prepare(`
+                SELECT * FROM factors WHERE type = ? ORDER BY name
+            `),
+
+            // Factor junction table prepared statements
+            addPositiveFactor: this.db.prepare(`
+                INSERT OR IGNORE INTO crop_review_positive_factors (crop_review_id, factor_id)
+                VALUES (?, ?)
+            `),
+
+            removePositiveFactor: this.db.prepare(`
+                DELETE FROM crop_review_positive_factors 
+                WHERE crop_review_id = ? AND factor_id = ?
+            `),
+
+            addNegativeFactor: this.db.prepare(`
+                INSERT OR IGNORE INTO crop_review_negative_factors (crop_review_id, factor_id)
+                VALUES (?, ?)
+            `),
+
+            removeNegativeFactor: this.db.prepare(`
+                DELETE FROM crop_review_negative_factors 
+                WHERE crop_review_id = ? AND factor_id = ?
+            `),
+
+            getPositiveFactorsForReview: this.db.prepare(`
+                SELECT f.* FROM factors f
+                JOIN crop_review_positive_factors crpf ON f.id = crpf.factor_id
+                WHERE crpf.crop_review_id = ?
+                ORDER BY f.name
+            `),
+
+            getNegativeFactorsForReview: this.db.prepare(`
+                SELECT f.* FROM factors f
+                JOIN crop_review_negative_factors crnf ON f.id = crnf.factor_id
+                WHERE crnf.crop_review_id = ?
+                ORDER BY f.name
+            `),
+
+            getAllFactorsForReview: this.db.prepare(`
+                SELECT 
+                    f.*,
+                    CASE WHEN crpf.factor_id IS NOT NULL THEN 'positive'
+                         WHEN crnf.factor_id IS NOT NULL THEN 'negative'
+                         ELSE NULL END as selected_type
+                FROM factors f
+                LEFT JOIN crop_review_positive_factors crpf ON f.id = crpf.factor_id AND crpf.crop_review_id = ?
+                LEFT JOIN crop_review_negative_factors crnf ON f.id = crnf.factor_id AND crnf.crop_review_id = ?
+                ORDER BY f.type, f.name
             `)
         };
     }
@@ -348,7 +455,25 @@ class TrafficCameraDB {
     }
 
     deleteCrop(cropId) {
-        return this.statements.deleteCrop.run(cropId);
+        // Delete in proper order to handle foreign key relationships
+        const transaction = this.db.transaction(() => {
+            // First, get the crop review ID if it exists
+            const review = this.statements.getCropReview.get(cropId);
+            
+            if (review) {
+                // Delete factors for the review
+                this.statements.deletePositiveFactorsForReview.run(review.id);
+                this.statements.deleteNegativeFactorsForReview.run(review.id);
+                
+                // Delete the review itself
+                this.statements.deleteCropReview.run(cropId);
+            }
+            
+            // Finally, delete the crop
+            return this.statements.deleteCrop.run(cropId);
+        });
+        
+        return transaction();
     }
 
     recordSession(sessionId, ipAddress, userAgent) {
@@ -376,12 +501,106 @@ class TrafficCameraDB {
         return this.statements.getUnreviewedCrops.all(limit);
     }
 
+    getMostRecentCrop() {
+        return this.statements.getMostRecentCrop.get();
+    }
+
     getReviewedCrops(limit = 50) {
         return this.statements.getReviewedCrops.all(limit);
     }
 
     getCropReviewStats() {
         return this.statements.getCropReviewStats.get();
+    }
+
+    // Factors management methods
+    createFactor(name, type, description = null) {
+        return this.statements.insertFactor.run(name, type, description);
+    }
+
+    updateFactor(id, name, type, description = null) {
+        return this.statements.updateFactor.run(name, type, description, id);
+    }
+
+    deleteFactor(id) {
+        // First remove all references to this factor from junction tables
+        const transaction = this.db.transaction(() => {
+            this.db.prepare('DELETE FROM crop_review_positive_factors WHERE factor_id = ?').run(id);
+            this.db.prepare('DELETE FROM crop_review_negative_factors WHERE factor_id = ?').run(id);
+            return this.statements.deleteFactor.run(id);
+        });
+        
+        return transaction();
+    }
+
+    getFactorById(id) {
+        return this.statements.getFactorById.get(id);
+    }
+
+    getFactorByName(name) {
+        return this.statements.getFactorByName.get(name);
+    }
+
+    getAllFactors() {
+        return this.statements.getAllFactors.all();
+    }
+
+    getFactorsByType(type) {
+        return this.statements.getFactorsByType.all(type);
+    }
+
+    // Factor assignment methods for crop reviews
+    addFactorToReview(cropReviewId, factorId, isPositive) {
+        if (isPositive) {
+            // Remove from negative if it exists, then add to positive
+            this.statements.removeNegativeFactor.run(cropReviewId, factorId);
+            return this.statements.addPositiveFactor.run(cropReviewId, factorId);
+        } else {
+            // Remove from positive if it exists, then add to negative
+            this.statements.removePositiveFactor.run(cropReviewId, factorId);
+            return this.statements.addNegativeFactor.run(cropReviewId, factorId);
+        }
+    }
+
+    removeFactorFromReview(cropReviewId, factorId) {
+        const transaction = this.db.transaction(() => {
+            this.statements.removePositiveFactor.run(cropReviewId, factorId);
+            this.statements.removeNegativeFactor.run(cropReviewId, factorId);
+        });
+        
+        return transaction();
+    }
+
+    getPositiveFactorsForReview(cropReviewId) {
+        return this.statements.getPositiveFactorsForReview.all(cropReviewId);
+    }
+
+    getNegativeFactorsForReview(cropReviewId) {
+        return this.statements.getNegativeFactorsForReview.all(cropReviewId);
+    }
+
+    getAllFactorsForReview(cropReviewId) {
+        return this.statements.getAllFactorsForReview.all(cropReviewId, cropReviewId);
+    }
+
+    setFactorsForReview(cropReviewId, positiveFactorIds = [], negativeFactorIds = []) {
+        const transaction = this.db.transaction(() => {
+            // Clear existing factors for this review
+            this.db.prepare('DELETE FROM crop_review_positive_factors WHERE crop_review_id = ?').run(cropReviewId);
+            this.db.prepare('DELETE FROM crop_review_negative_factors WHERE crop_review_id = ?').run(cropReviewId);
+            
+            // Add positive factors
+            positiveFactorIds.forEach(factorId => {
+                this.statements.addPositiveFactor.run(cropReviewId, factorId);
+            });
+            
+            // Add negative factors
+            negativeFactorIds.forEach(factorId => {
+                this.statements.addNegativeFactor.run(cropReviewId, factorId);
+            });
+        });
+        
+        return transaction();
     }
 
     // Utility methods
@@ -458,6 +677,118 @@ class TrafficCameraDB {
             if (!imageStatsColumnNames.includes('archived_path')) {
                 console.log('🔄 Adding archived_path column to image_stats table...');
                 this.db.exec('ALTER TABLE image_stats ADD COLUMN archived_path TEXT');
+            }
+
+            // Create factors table if it doesn't exist
+            const factorsTable = this.db.prepare("SELECT name FROM sqlite_master WHERE type='table' AND name='factors'").all();
+            if (factorsTable.length === 0) {
+                console.log('🔄 Creating factors table...');
+                this.db.exec(`
+                    CREATE TABLE factors (
+                        id INTEGER PRIMARY KEY AUTOINCREMENT,
+                        name TEXT NOT NULL UNIQUE,
+                        type TEXT NOT NULL CHECK(type IN ('positive', 'negative')),
+                        description TEXT,
+                        created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+                        updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
+                    )
+                `);
+                
+                // Create indexes for the factors table
+                this.db.exec(`
+                    CREATE INDEX IF NOT EXISTS idx_factors_type ON factors(type);
+                    CREATE INDEX IF NOT EXISTS idx_factors_name ON factors(name);
+                `);
+                
+                console.log('✅ Created factors table with indexes');
+                
+                // Seed the factors table with initial common factors
+                console.log('🌱 Seeding factors table with initial data...');
+                const initialFactors = [
+                    // Positive factors (suggesting it's Jonathan)
+                    { name: 'blue shirt', type: 'positive', description: 'Person is wearing a blue shirt' },
+                    { name: 'riding a bike', type: 'positive', description: 'Person is riding a bicycle' },
+                    { name: 'waiting for bus', type: 'positive', description: 'Person appears to be waiting for a bus' },
+                    { name: 'at bus stop', type: 'positive', description: 'Person is at or near a bus stop' },
+                    { name: 'tall person', type: 'positive', description: 'Person appears to be tall' },
+                    { name: 'dark hair', type: 'positive', description: 'Person has dark colored hair' },
+                    { name: 'backpack', type: 'positive', description: 'Person is wearing or carrying a backpack' },
+                    { name: 'casual clothing', type: 'positive', description: 'Person is dressed casually' },
+                    
+                    // Negative factors (suggesting it's not Jonathan)
+                    { name: 'red shirt', type: 'negative', description: 'Person is wearing a red shirt' },
+                    { name: 'yellow shirt', type: 'negative', description: 'Person is wearing a yellow shirt' },
+                    { name: 'white shirt', type: 'negative', description: 'Person is wearing a white shirt' },
+                    { name: 'driving car', type: 'negative', description: 'Person is driving a car' },
+                    { name: 'short person', type: 'negative', description: 'Person appears to be short' },
+                    { name: 'blonde hair', type: 'negative', description: 'Person has blonde colored hair' },
+                    { name: 'formal clothing', type: 'negative', description: 'Person is dressed formally' },
+                    { name: 'child', type: 'negative', description: 'Person appears to be a child' },
+                    { name: 'elderly person', type: 'negative', description: 'Person appears to be elderly' },
+                    { name: 'woman', type: 'negative', description: 'Person appears to be a woman' }
+                ];
+                
+                const insertFactorStmt = this.db.prepare(`
+                    INSERT INTO factors (name, type, description, updated_at)
+                    VALUES (?, ?, ?, CURRENT_TIMESTAMP)
+                `);
+                
+                initialFactors.forEach(factor => {
+                    try {
+                        insertFactorStmt.run(factor.name, factor.type, factor.description);
+                    } catch (error) {
+                        // Factor might already exist, skip
+                        console.log(`⚠️  Factor '${factor.name}' already exists, skipping...`);
+                    }
+                });
+                
+                console.log('✅ Seeded factors table with initial data');
+            }
+
+            // Create crop_review_positive_factors junction table if it doesn't exist
+            const positiveFactorsTable = this.db.prepare("SELECT name FROM sqlite_master WHERE type='table' AND name='crop_review_positive_factors'").all();
+            if (positiveFactorsTable.length === 0) {
+                console.log('🔄 Creating crop_review_positive_factors junction table...');
+                this.db.exec(`
+                    CREATE TABLE crop_review_positive_factors (
+                        crop_review_id INTEGER NOT NULL,
+                        factor_id INTEGER NOT NULL,
+                        PRIMARY KEY (crop_review_id, factor_id),
+                        FOREIGN KEY (crop_review_id) REFERENCES crop_reviews(id) ON DELETE CASCADE,
+                        FOREIGN KEY (factor_id) REFERENCES factors(id) ON DELETE CASCADE
+                    )
+                `);
+                
+                // Create indexes for the junction table
+                this.db.exec(`
+                    CREATE INDEX IF NOT EXISTS idx_positive_factors_review ON crop_review_positive_factors(crop_review_id);
+                    CREATE INDEX IF NOT EXISTS idx_positive_factors_factor ON crop_review_positive_factors(factor_id);
+                `);
+                
+                console.log('✅ Created crop_review_positive_factors junction table with indexes');
+            }
+
+            // Create crop_review_negative_factors junction table if it doesn't exist
+            const negativeFactorsTable = this.db.prepare("SELECT name FROM sqlite_master WHERE type='table' AND name='crop_review_negative_factors'").all();
+            if (negativeFactorsTable.length === 0) {
+                console.log('🔄 Creating crop_review_negative_factors junction table...');
+                this.db.exec(`
+                    CREATE TABLE crop_review_negative_factors (
+                        crop_review_id INTEGER NOT NULL,
+                        factor_id INTEGER NOT NULL,
+                        PRIMARY KEY (crop_review_id, factor_id),
+                        FOREIGN KEY (crop_review_id) REFERENCES crop_reviews(id) ON DELETE CASCADE,
+                        FOREIGN KEY (factor_id) REFERENCES factors(id) ON DELETE CASCADE
+                    )
+                `);
+                
+                // Create indexes for the junction table
+                this.db.exec(`
+                    CREATE INDEX IF NOT EXISTS idx_negative_factors_review ON crop_review_negative_factors(crop_review_id);
+                    CREATE INDEX IF NOT EXISTS idx_negative_factors_factor ON crop_review_negative_factors(factor_id);
+                `);
+                
+                console.log('✅ Created crop_review_negative_factors junction table with indexes');
             }
             
             // Check if crop_reviews table exists

@@ -1,16 +1,31 @@
-# Traffic Camera Viewer - Node.js Web Application
+# Traffic Camera Viewer & Crop Review System
 
-A modern web application to view and browse captured traffic camera images from the Python capture system.
+A modern web application for viewing captured traffic camera images and reviewing cropped areas using a flexible factors-based classification system.
 
 ## Features
 
+### Image Viewing & Cropping
 - **Overview Dashboard**: See latest images from all cameras at a glance
 - **Individual Camera View**: Browse all images from specific cameras with pagination
+- **Interactive Cropping**: Click and drag to crop areas of interest from images
 - **Image Modal**: Click any image to view it in full size
 - **Real-time Stats**: Monitor total cameras, images, and storage usage
 - **Auto-refresh**: Automatically updates every 30 seconds
 - **Responsive Design**: Works on desktop, tablet, and mobile devices
-- **Modern UI**: Clean, intuitive interface with smooth animations
+
+### Crop Review System
+- **Factors-Based Classification**: Use predefined or custom factors to classify crops
+- **Positive/Negative Factors**: Assign factors that suggest whether a person is the target individual
+- **Image Enhancement**: Auto-sharpen and enhance crops for better visibility
+- **Auto-save**: Automatically saves reviews as you make changes
+- **Review Dashboard**: Browse and filter all crops with advanced search
+- **Keyboard Shortcuts**: Speed up review process with keyboard navigation
+
+### Database & Analytics
+- **SQLite Database**: Robust local storage with proper indexing
+- **Migration Support**: Backward-compatible schema migrations
+- **Statistical Analysis**: Track review progress and factor usage
+- **Export Capabilities**: API endpoints for data export and analysis
 
 ## Prerequisites
 
@@ -47,27 +62,106 @@ The application will be available at: `http://localhost:3000`
 
 ### API Endpoints
 
-The application provides several REST API endpoints:
-
+#### Core Image API
 - `GET /api/cameras` - List all available cameras
 - `GET /api/cameras/:name/images` - Get images for a specific camera (with pagination)
 - `GET /api/latest` - Get latest image from each camera
 - `GET /api/stats` - Get system statistics
 
+#### Crop Management API
+- `POST /api/crops` - Save a new crop from an image
+- `GET /api/crops` - Get all saved crops (with pagination and filters)
+- `GET /api/crops/:id` - Get a specific crop by ID
+- `DELETE /api/crops/:id` - Delete a crop and its files
+- `GET /api/crops/unreviewed` - Get crops that haven't been reviewed yet
+
+#### Review & Classification API
+- `POST /api/crops/:id/review` - Save or update a crop review
+- `GET /api/crops/:id/review` - Get existing review for a crop
+- `GET /api/review/stats` - Get review statistics
+
+#### Factors Management API
+- `GET /api/factors` - Get all classification factors
+- `GET /api/factors/:type` - Get factors by type (positive/negative)
+- `POST /api/factors` - Create a new factor
+- `PUT /api/factors/:id` - Update an existing factor
+- `DELETE /api/factors/:id` - Delete a factor
+
 ### Web Interface
 
-1. **Overview Tab**: 
+#### Main Pages
+1. **Home Page** (`/`): 
    - Shows latest image from each camera
-   - Displays image count and last update time
-   - Click any image to view full size
+   - Interactive cropping interface
+   - Click any image to view full size or create crops
 
-2. **All Cameras Tab**:
-   - Select a camera from dropdown
-   - Browse all images with pagination (20 per page)
-   - View image details (filename, timestamp, size)
+2. **Crop Review** (`/crop-review.html`):
+   - Review queue for unreviewed crops
+   - Factors-based classification system
+   - Image enhancement and filtering
+   - Keyboard shortcuts for efficient review
 
-3. **Timeline Tab**:
-   - Placeholder for future timeline functionality
+3. **Dashboard** (`/dashboard.html`):
+   - Browse all crops with advanced filtering
+   - Search by classification, activity, clothing, etc.
+   - Pagination and sorting options
+   - Export capabilities
+
+#### Factors-Based Classification
+
+The system uses a flexible factors approach:
+
+- **Positive Factors**: Attributes suggesting the person IS the target individual
+- **Negative Factors**: Attributes suggesting the person is NOT the target individual
+- **Neutral Factors**: Informational attributes for filtering
+
+Example factors:
+- `blue shirt` (positive) - Person is wearing a blue shirt
+- `riding bicycle` (positive) - Person is riding a bicycle  
+- `child or youth` (negative) - Person appears to be a child
+- `driving vehicle` (negative) - Person is driving a car
+
+#### Managing Factors
+
+Factors can be managed through:
+
+1. **Database Browser** (recommended for bulk edits):
+   ```bash
+   # Download from https://sqlitebrowser.org/
+   # Open traffic_cameras.db and edit the 'factors' table
+   ```
+
+2. **Command Line Tool**:
+   ```bash
+   # List all factors
+   node manage-factors.js list
+   
+   # Add new factor
+   node manage-factors.js add "wearing glasses" positive "Person is wearing glasses"
+   
+   # Update existing factor
+   node manage-factors.js update 1 "light blue shirt" positive "Person is wearing a light blue shirt"
+   
+   # Seed better default factors
+   node manage-factors.js seed-better
+   ```
+
+3. **API Endpoints** (for programmatic access):
+   ```javascript
+   // Get all factors
+   fetch('/api/factors')
+   
+   // Create new factor
+   fetch('/api/factors', {
+     method: 'POST',
+     headers: { 'Content-Type': 'application/json' },
+     body: JSON.stringify({
+       name: 'wearing glasses',
+       type: 'positive', 
+       description: 'Person is wearing glasses'
+     })
+   })
+   ```
 
 ## File Structure
 

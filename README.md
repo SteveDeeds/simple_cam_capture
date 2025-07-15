@@ -1,9 +1,10 @@
-# Traffic Camera Capture System
+# Traffic Camera Capture & Review System
 
-This application automatically captures images from traffic cameras at regular intervals, avoiding duplicate images based on similarity detection.
+This application automatically captures images from traffic cameras and provides a web-based interface for reviewing and classifying crops of people in the images using a flexible factors-based system.
 
 ## Features
 
+### Camera Capture
 - Captures images from multiple traffic cameras every 30 seconds
 - Detects similar images (99.99% similarity threshold) and skips saving them
 - No retries - failed captures will be attempted again on the next cycle
@@ -11,19 +12,36 @@ This application automatically captures images from traffic cameras at regular i
 - Logs all activities to both console and log file
 - Robust error handling and recovery
 
+### Web-Based Review System
+- Crop areas of interest from captured images
+- Review and classify crops using a flexible factors-based system
+- Factors include visual attributes (clothing color, activities, physical traits)
+- Support for both positive and negative factors
+- Auto-save functionality during review
+- Image enhancement and filtering for better visibility
+- Dashboard for browsing and filtering reviewed crops
+
 ## Setup
 
+### Python Dependencies
 1. Install Python dependencies:
    ```
    pip install -r requirements.txt
    ```
 
-2. Ensure `config.json` contains your camera URLs in the format:
+### Node.js Dependencies  
+2. Install Node.js dependencies for the web interface:
+   ```
+   npm install
+   ```
+
+### Configuration
+3. Ensure `config.json` contains your camera URLs in the format:
    ```json
    {
      "cameras": [
        {
-         "name": "Camera_Name",
+         "name": "Camera_Name", 
          "url": "https://example.com/camera1.jpg"
        }
      ]
@@ -32,42 +50,54 @@ This application automatically captures images from traffic cameras at regular i
 
 ## Usage
 
-Run the camera capture system:
+### Start the Camera Capture System
 ```
 python camera_capture.py
 ```
 
-The program will:
-- Create a `captured_images` folder with subfolders for each camera
-- Start capturing images every 30 seconds
-- Log activities to `camera_capture.log`
-- Continue running until stopped with Ctrl+C
-
-## Output Structure
-
+### Start the Web Server
 ```
-captured_images/
-├── 98th_Ave_116th_St/
-│   ├── 20250710_143022.jpg
-│   ├── 20250710_143122.jpg
-│   └── ...
-├── 132nd_St_108th_Ave/
-│   ├── 20250710_143025.jpg
-│   └── ...
-└── ...
+npm start
+```
+or
+```
+node server.js
 ```
 
-## Configuration
+The web interface will be available at `http://localhost:3000`
 
-- **Capture Interval**: 30 seconds
-- **Similarity Threshold**: 99.99%
-- **Retry Logic**: No retries - failed captures attempted on next cycle
-- **Image Format**: JPEG
+### Available Web Pages
+- **Main Interface** (`/`): View live camera feeds and crop areas of interest
+- **Crop Review** (`/crop-review.html`): Review and classify saved crops using factors
+- **Dashboard** (`/dashboard.html`): Browse and filter all crops with advanced search
 
-## Logging
+## Factors-Based Classification System
 
-All activities are logged to:
-- Console output
-- `camera_capture.log` file
+The system uses a flexible factors-based approach for classifying crops:
 
-Log levels include INFO, WARNING, and ERROR messages for monitoring system health.
+### Factor Types
+- **Positive Factors**: Attributes that suggest the person IS the target individual
+- **Negative Factors**: Attributes that suggest the person is NOT the target individual
+
+### Default Factors Include:
+- **Clothing**: shirt colors, clothing style
+- **Activities**: riding bike, waiting for bus, etc.
+- **Physical Traits**: height, hair color, age appearance
+- **Context**: location context, accessories
+
+### Managing Factors
+Factors can be managed through:
+1. **Database Browser** (recommended for bulk edits)
+2. **Command Line Scripts** (for programmatic updates)
+3. **API Endpoints** (for web-based management - future feature)
+
+## Database Schema
+
+The system uses SQLite with the following key tables:
+- `factors` - Stores all available classification factors
+- `crop_reviews` - Stores review data for each crop
+- `crop_review_positive_factors` - Links reviews to positive factors
+- `crop_review_negative_factors` - Links reviews to negative factors
+- `saved_crops` - Stores crop metadata and file locations
+
+See `FACTORS_DATABASE_DESIGN.md` for detailed schema documentation.
