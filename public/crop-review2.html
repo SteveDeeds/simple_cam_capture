@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Crop Review v2 - Traffic Camera Analysis</title>
+    <link rel="stylesheet" href="crop-review2.css">
+</head>
+<body>
+    <div class="header">
+        <h1>🚦 Crop Review v2</h1>
+        <div class="nav-info">
+            <span id="currentIndex">0</span> / <span id="totalCrops">0</span>
+        </div>
+    </div>
+
+    <div class="main-container">
+        <!-- Left: Full traffic camera image (75%) -->
+        <div class="original-view">
+            <div class="original-image-container" id="originalImageContainer">
+                <img id="originalImage" src="" alt="Original Traffic Camera Image" style="display: none;">
+                <div class="crop-overlay" id="cropOverlay"></div>
+                <div id="originalLoading" class="loading">Loading original image...</div>
+                <div id="noOriginalImage" class="no-image" style="display: none;">Original image not available</div>
+            </div>
+            <div class="original-info">
+                <div class="info-row">
+                    <strong>Camera:</strong> <span id="originalCameraName">-</span>
+                </div>
+                <div class="info-row">
+                    <strong>Image:</strong> <span id="originalImageName">-</span>
+                </div>
+                <div class="info-row">
+                    <strong>Time:</strong> <span id="originalImageTime">-</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Middle: Crop variations (20%) -->
+        <div class="crops-section">
+            <h3>Crop Analysis</h3>
+            <div class="crop-images">
+                <div class="crop-image-container">
+                    <h4>Original Crop</h4>
+                    <img id="originalCropImage" src="" alt="Original Crop">
+                </div>
+                <div class="crop-image-container">
+                    <h4>Enhanced Crop</h4>
+                    <img id="enhancedCropImage" src="" alt="Enhanced Crop">
+                </div>
+                <div class="crop-image-container">
+                    <h4>Filtered Crop</h4>
+                    <img id="filteredCropImage" src="" alt="Filtered Crop">
+                </div>
+            </div>
+        </div>
+
+        <!-- Right: Review interface -->
+        <div class="review-section">
+            <!-- Factors grid -->
+            <div class="factors-container">
+                <h3>📋 Review Factors</h3>
+                <div id="allFactors" class="factors-grid">
+                    <!-- All factors will be populated here in two columns -->
+                </div>
+            </div>
+
+            <!-- Is Jonathan section -->
+            <div class="jonathan-section">
+                <h3>Is Jonathan?</h3>
+                <div class="jonathan-options">
+                    <label class="radio-option">
+                        <input type="radio" name="isJonathan" value="could be">
+                        <span class="radio-label maybe">Could Be</span>
+                    </label>
+                    <label class="radio-option">
+                        <input type="radio" name="isJonathan" value="can't tell">
+                        <span class="radio-label unknown">Can't Tell</span>
+                    </label>
+                    <label class="radio-option">
+                        <input type="radio" name="isJonathan" value="no">
+                        <span class="radio-label no">No</span>
+                    </label>
+                </div>
+            </div>
+
+            <!-- Notes section -->
+            <div class="notes-section">
+                <h3>Notes</h3>
+                <textarea id="reviewNotes" placeholder="Add any additional notes about this crop..."></textarea>
+            </div>
+
+            <!-- Action buttons -->
+            <div class="actions">
+                <button id="saveNextBtn" class="btn btn-primary">Save & Next</button>
+                <button id="skipBtn" class="btn btn-secondary">Skip</button>
+                <button id="previousBtn" class="btn btn-secondary">Previous</button>
+                <button id="deleteBtn" class="btn btn-danger">Delete</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bottom navigation -->
+    <div class="bottom-nav">
+        <a href="dashboard.html">📊 Dashboard</a>
+        <a href="crop-dashboard.html">🌾 Crop Dashboard</a>
+        <a href="camera-viewer.html">📷 Camera Viewer</a>
+    </div>
+
+    <!-- Loading overlay -->
+    <div id="loadingOverlay" class="loading-overlay" style="display: none;">
+        <div class="loading-spinner">Processing...</div>
+    </div>
+
+    <script src="crop-review2.js"></script>
+</body>
+</html>

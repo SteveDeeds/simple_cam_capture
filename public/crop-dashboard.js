@@ -86,9 +86,9 @@ async function loadCrops() {
         const data = await response.json();
         console.log('📊 CLIENT DEBUG: Response data:', data);
         console.log('📊 CLIENT DEBUG: Crops array length:', data.crops ? data.crops.length : 'undefined');
-        console.log('📊 CLIENT DEBUG: Total count:', data.total);
+        console.log('📊 CLIENT DEBUG: Total count:', data.totalCount);
         
-        totalItems = data.total;
+        totalItems = data.totalCount || 0;
         displayCrops(data.crops);
         updatePagination();
         updateResultsCount();
@@ -263,8 +263,8 @@ function showLoading(show) {
 }
 
 function viewOriginal(camera, filename) {
-    // Open the main camera view with the specific image
-    window.open(`/?camera=${encodeURIComponent(camera)}&file=${encodeURIComponent(filename)}`, '_blank');
+    // Open the camera viewer with the specific image
+    window.open(`/camera-viewer.html?camera=${encodeURIComponent(camera)}&file=${encodeURIComponent(filename)}`, '_blank');
 }
 
 // Refresh data periodically - DISABLED to prevent flashing

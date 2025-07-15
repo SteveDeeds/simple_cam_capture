@@ -28,19 +28,19 @@ app.use((req, res, next) => {
     next();
 });
 
-// Simple rate limiting (disabled for testing)
-/*
-const // Serve the crop dashboard page
+// Serve the crop dashboard page
 app.get('/dashboard', (req, res) => {
     res.sendFile(path.join(__dirname, 'public', 'crop-dashboard.html'));
 });
 
-// Serve the crop review page
+// Serve the crop review page - redirect to preserve query parameters
 app.get('/crop-review', (req, res) => {
-    res.sendFile(path.join(__dirname, 'public', 'crop-review.html'));
+    const queryString = req.url.includes('?') ? req.url.substring(req.url.indexOf('?')) : '';
+    res.redirect(`/crop-review2.html${queryString}`);
 });
 
-// Serve constants to frontendmitMap = new Map();
+// Serve constants to frontend
+const rateLimitMap = new Map();
 const RATE_LIMIT_WINDOW = 5 * 60 * 1000; // 5 minutes
 const RATE_LIMIT_MAX = 1000; // requests per window (much more generous)
 
@@ -49,7 +49,7 @@ app.use((req, res, next) => {
     const clientIP = req.headers['x-forwarded-for'] || req.connection.remoteAddress || req.socket.remoteAddress;
     
     // Skip rate limiting for localhost
-    if (clientIP === '127.0.0.1' || clientIP === '::1' || clientIP?.includes('127.0.0.1')) {
+    if (clientIP === '::1' || clientIP?.includes('127.0.0.1')) {
         return next();
     }
     
@@ -79,17 +79,11 @@ app.use((req, res, next) => {
     clientData.count++;
     next();
 });
-*/
 
 // Cloud-friendly paths
 const DATA_DIR = process.env.DATA_DIR || __dirname;
 const CAPTURED_IMAGES_DIR = process.env.CAPTURED_IMAGES_DIR || path.join(__dirname, 'captured_images');
 const SAVED_IMAGES_DIR = process.env.SAVED_IMAGES_DIR || path.join(__dirname, 'saved_images');
-
-// Generate session ID for tracking unique visitors
-function generateSessionId() {
-    return 'sess_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
-}
 
 // Get client IP address
 function getClientIP(req) {
@@ -672,17 +666,73 @@ app.get('/api/crops/unreviewed', (req, res) => {
     try {
         const limit = parseInt(req.query.limit) || 50;
         const crops = db.getUnreviewedCrops(limit);
+        console.log(`🔍 DEBUG: Raw unreviewed crops from DB: ${crops.length}`);
+        
         // Filter out test data and crops without valid file paths
-        const validCrops = crops.filter(crop => 
-            crop.crop_folder && 
-            crop.crop_filename && 
-            !crop.crop_folder.includes('test_camera') &&
-            !crop.crop_filename.includes('test_image')
-        );
-        res.json(validCrops);
+        const validCrops = crops.filter(crop => {
+            const hasFolder = !!crop.crop_folder;
+            const hasFilename = !!crop.crop_filename;
+            const notTestCamera = !crop.crop_folder?.includes('test_camera');
+            const notTestImage = !crop.crop_filename?.includes('test_image');
+            
+            return hasFolder && hasFilename && notTestCamera && notTestImage;
+        });
+        
+        console.log(`🔍 DEBUG: Valid crops after filtering: ${validCrops.length}`);
+        
+        // Add metadata about filtered crops for better user feedback
+        const response = {
+            crops: validCrops,
+            metadata: {
+                total_found: crops.length,
+                valid_crops: validCrops.length,
+                filtered_out: crops.length - validCrops.length,
+                has_only_test_data: crops.length > 0 && validCrops.length === 0
+            }
+        };
+        
+        // For backward compatibility, if limit=1 and we want just the array
+        if (parseInt(req.query.limit) === 1) {
+            res.json(validCrops);
+        } else {
+            res.json(response);
+        }
     } catch (error) {
         console.error('Error getting unreviewed crops:', error);
         res.status(500).json({ error: 'Failed to get unreviewed crops' });
+    }
+});
+
+// Get the most recent crop (regardless of review status)
+app.get('/api/crops/most-recent', (req, res) => {
+    try {
+        const crop = db.getMostRecentCrop();
+        
+        if (!crop) {
+            return res.status(404).json({ error: 'No crops found' });
+        }
+        
+        res.json(crop);
+    } catch (error) {
+        console.error('Error getting most recent crop:', error);
+        res.status(500).json({ error: 'Failed to get most recent crop' });
+    }
+});
+
+// Get a specific crop by ID
+app.get('/api/crops/:cropId', (req, res) => {
+    try {
+        const { cropId } = req.params;
+        const cropData = db.getSavedCropById(parseInt(cropId));
+        
+        if (!cropData) {
+            return res.status(404).json({ error: 'Crop not found' });
+        }
+        
+        res.json(cropData);
+    } catch (error) {
+        console.error('Error getting crop:', error);
+        res.status(500).json({ error: 'Failed to get crop' });
     }
 });
 
@@ -698,10 +748,22 @@ app.get('/api/crops/:cropId/review', (req, res) => {
         
         const review = db.getCropReview(parseInt(cropId));
         
-        // Return both crop data and review data
+        // If review exists, get factors data
+        let factors = null;
+        if (review) {
+            const positiveFactors = db.getPositiveFactorsForReview(review.id);
+            const negativeFactors = db.getNegativeFactorsForReview(review.id);
+            factors = {
+                positive: positiveFactors,
+                negative: negativeFactors
+            };
+        }
+        
+        // Return both crop data and review data with factors
         res.json({
             crop: cropData,
-            review: review || null
+            review: review || null,
+            factors: factors
         });
     } catch (error) {
         console.error('Error getting crop review:', error);
@@ -709,7 +771,7 @@ app.get('/api/crops/:cropId/review', (req, res) => {
     }
 });
 
-// Save or update crop review
+// Save or update crop review with factors support
 app.post('/api/crops/:cropId/review', (req, res) => {
     try {
         const { cropId } = req.params;
@@ -718,10 +780,13 @@ app.post('/api/crops/:cropId/review', (req, res) => {
             is_jonathan, 
             activities, 
             top_clothing, 
-            reviewed_at 
+            reviewed_at,
+            positive_factors = [],
+            negative_factors = []
         } = req.body;
         const reviewedByIP = req.headers['x-forwarded-for'] || req.connection.remoteAddress || req.socket.remoteAddress;
         
+        // Save the basic review data
         const result = db.saveCropReview(
             parseInt(cropId),
             notes,
@@ -732,10 +797,18 @@ app.post('/api/crops/:cropId/review', (req, res) => {
             reviewed_at
         );
         
+        // Get the review ID (either newly created or existing)
+        const review = db.getCropReview(parseInt(cropId));
+        if (review) {
+            // Set factors for this review
+            db.setFactorsForReview(review.id, positive_factors, negative_factors);
+        }
+        
         res.json({ 
             success: true, 
             cropId: parseInt(cropId),
-            changes: result.changes
+            changes: result.changes,
+            factors_updated: true
         });
     } catch (error) {
         console.error('Error saving crop review:', error);
@@ -747,15 +820,20 @@ app.post('/api/crops/:cropId/review', (req, res) => {
 app.delete('/api/crops/:cropId', (req, res) => {
     try {
         const { cropId } = req.params;
+        console.log(`🗑️ DELETE request for crop ID: ${cropId}`);
+        
         const result = db.deleteCrop(parseInt(cropId));
+        console.log(`🗑️ Delete result:`, result);
         
         if (result.changes > 0) {
+            console.log(`✅ Crop ${cropId} deleted successfully`);
             res.json({ 
                 success: true, 
-                cropId: parseInt(cropId),
-                message: 'Crop deleted successfully'
+                message: 'Crop deleted successfully',
+                cropId: parseInt(cropId)
             });
         } else {
+            console.log(`❌ Crop ${cropId} not found in database`);
             res.status(404).json({ error: 'Crop not found' });
         }
     } catch (error) {
@@ -764,105 +842,185 @@ app.delete('/api/crops/:cropId', (req, res) => {
     }
 });
 
-// Dashboard API Endpoints
-
 // Get crop statistics for dashboard
 app.get('/api/crop-stats', (req, res) => {
     try {
         const stats = db.getCropReviewStats();
-        res.json(stats);
+        
+        // Map database field names to expected frontend field names
+        const formattedStats = stats ? {
+            total_crops: stats.total_crops || 0,
+            total_reviews: stats.total_reviews || 0,
+            classified_crops: stats.classified_crops || 0,
+            reviewed_crops: stats.classified_crops || 0, // alias for compatibility
+            unreviewed_crops: stats.never_reviewed || 0, // map never_reviewed to unreviewed_crops
+            never_reviewed: stats.never_reviewed || 0,
+            partial_reviews: stats.partial_reviews || 0,
+            jonathan_yes: 0, // placeholder - could be calculated if needed
+            jonathan_maybe: 0, // placeholder
+            jonathan_no: 0 // placeholder
+        } : {
+            total_crops: 0,
+            reviewed_crops: 0,
+            unreviewed_crops: 0,
+            jonathan_yes: 0,
+            jonathan_maybe: 0,
+            jonathan_no: 0
+        };
+        
+        res.json(formattedStats);
     } catch (error) {
-        console.error('Error getting crop stats:', error);
+        console.error('Error getting crop statistics:', error);
         res.status(500).json({ error: 'Failed to get crop statistics' });
     }
 });
 
-// Get filtered crops for dashboard with pagination
+// Get filtered crops for dashboard
 app.get('/api/crops-filtered', (req, res) => {
     try {
-        console.log('🔍 DEBUG: Received crops-filtered request');
-        console.log('📋 Query params:', req.query);
+        const { page = 1, limit = 50, status, jonathan, activity, clothing } = req.query;
+        const offset = (parseInt(page) - 1) * parseInt(limit);
         
-        const page = parseInt(req.query.page) || 1;
-        const limit = parseInt(req.query.limit) || 8;
-        const offset = (page - 1) * limit;
+        // Build filters object
+        const filters = {};
+        if (status && status !== 'all') filters.status = status;
+        if (jonathan && jonathan !== 'all') filters.jonathan = jonathan;
+        if (activity && activity !== 'all') filters.activity = activity;
+        if (clothing && clothing !== 'all') filters.clothing = clothing;
         
-        const filters = {
-            status: req.query.status || 'all',
-            jonathan: req.query.jonathan || 'all',
-            activity: req.query.activity || 'all',
-            clothing: req.query.clothing || 'all'
-        };
+        console.log('🔍 SERVER DEBUG: Filtering crops with:', { filters, limit: parseInt(limit), offset });
         
-        console.log('🎯 Filters applied:', filters);
-        console.log('📄 Pagination: page =', page, 'limit =', limit, 'offset =', offset);
+        // Get filtered crops
+        const crops = db.getFilteredCrops(filters, parseInt(limit), offset);
+        const totalCount = db.getFilteredCropsCount(filters);
         
-        console.log('🔄 Calling db.getFilteredCrops...');
-        const crops = db.getFilteredCrops(filters, limit, offset);
-        console.log('📊 Raw crops count:', crops.length);
-        console.log('📊 Sample crop (first one):', crops[0] || 'No crops found');
-        
-        console.log('🔄 Calling db.getFilteredCropsCount...');
-        const total = db.getFilteredCropsCount(filters);
-        console.log('📊 Total crops count:', total);
-        
-        // Filter out test data and crops without valid file paths
-        console.log('🧹 Filtering out test data...');
-        const validCrops = crops.filter(crop => 
-            crop.crop_folder && 
-            crop.crop_filename && 
-            !crop.crop_folder.includes('test_camera') &&
-            !crop.crop_filename.includes('test_image')
-        );
-        
-        console.log('✅ Valid crops count:', validCrops.length);
-        console.log('📁 Valid crop paths (first 3):');
-        validCrops.slice(0, 3).forEach((crop, index) => {
-            console.log(`   ${index + 1}. /saved_images/${crop.crop_folder}/${crop.crop_filename}`);
+        res.json({
+            crops: crops || [],
+            totalCount: totalCount || 0,
+            page: parseInt(page),
+            limit: parseInt(limit),
+            totalPages: Math.ceil((totalCount || 0) / parseInt(limit))
         });
-        
-        const response = {
-            crops: validCrops,
-            total: total,
-            page: page,
-            limit: limit,
-            totalPages: Math.ceil(total / limit)
-        };
-        
-        console.log('📤 Sending response with', validCrops.length, 'crops');
-        res.json(response);
     } catch (error) {
-        console.error('❌ Error getting filtered crops:', error);
-        console.error('Stack trace:', error.stack);
-        res.status(500).json({ error: 'Failed to get filtered crops', details: error.message });
+        console.error('Error getting filtered crops:', error);
+        res.status(500).json({ error: 'Failed to get filtered crops' });
     }
 });
 
-// Serve the main page
-app.get('/', (req, res) => {
-    res.sendFile(path.join(__dirname, 'public', 'index.html'));
+// Factors API Endpoints
+
+// Get all factors
+app.get('/api/factors', (req, res) => {
+    try {
+        const factors = db.getAllFactors();
+        res.json(factors);
+    } catch (error) {
+        console.error('Error getting factors:', error);
+        res.status(500).json({ error: 'Failed to get factors' });
+    }
 });
 
-// Serve the crop dashboard page
-app.get('/dashboard', (req, res) => {
-    res.sendFile(path.join(__dirname, 'public', 'crop-dashboard.html'));
+// Get factors by type
+app.get('/api/factors/:type', (req, res) => {
+    try {
+        const { type } = req.params;
+        if (type !== 'positive' && type !== 'negative') {
+            return res.status(400).json({ error: 'Type must be "positive" or "negative"' });
+        }
+        
+        const factors = db.getFactorsByType(type);
+        res.json(factors);
+    } catch (error) {
+        console.error('Error getting factors by type:', error);
+        res.status(500).json({ error: 'Failed to get factors by type' });
+    }
 });
 
-// Serve the crop review page
-app.get('/crop-review', (req, res) => {
-    res.sendFile(path.join(__dirname, 'public', 'crop-review.html'));
+// Create a new factor
+app.post('/api/factors', (req, res) => {
+    try {
+        const { name, type, description } = req.body;
+        
+        if (!name || !type) {
+            return res.status(400).json({ error: 'Name and type are required' });
+        }
+        
+        if (type !== 'positive' && type !== 'negative') {
+            return res.status(400).json({ error: 'Type must be "positive" or "negative"' });
+        }
+        
+        const result = db.createFactor(name, type, description);
+        
+        res.json({
+            success: true,
+            factor_id: result.lastInsertRowid,
+            message: 'Factor created successfully'
+        });
+    } catch (error) {
+        console.error('Error creating factor:', error);
+        if (error.message.includes('UNIQUE constraint failed')) {
+            res.status(409).json({ error: 'A factor with this name already exists' });
+        } else {
+            res.status(500).json({ error: 'Failed to create factor' });
+        }
+    }
 });
 
-// Serve constants to frontend
-app.get('/api/constants', (req, res) => {
-    const { JONATHAN_OPTIONS, ACTIVITY_OPTIONS, CLOTHING_OPTIONS } = require('./constants');
-    res.json({
-        JONATHAN_OPTIONS,
-        ACTIVITY_OPTIONS,
-        CLOTHING_OPTIONS
-    });
+// Update a factor
+app.put('/api/factors/:factorId', (req, res) => {
+    try {
+        const { factorId } = req.params;
+        const { name, type, description } = req.body;
+        
+        if (!name || !type) {
+            return res.status(400).json({ error: 'Name and type are required' });
+        }
+        
+        if (type !== 'positive' && type !== 'negative') {
+            return res.status(400).json({ error: 'Type must be "positive" or "negative"' });
+        }
+        
+        const result = db.updateFactor(parseInt(factorId), name, type, description);
+        
+        if (result.changes > 0) {
+            res.json({
+                success: true,
+                factor_id: parseInt(factorId),
+                message: 'Factor updated successfully'
+            });
+        } else {
+            res.status(404).json({ error: 'Factor not found' });
+        }
+    } catch (error) {
+        console.error('Error updating factor:', error);
+        if (error.message.includes('UNIQUE constraint failed')) {
+            res.status(409).json({ error: 'A factor with this name already exists' });
+        } else {
+            res.status(500).json({ error: 'Failed to update factor' });
+        }
+    }
 });
 
+// Delete a factor
+app.delete('/api/factors/:factorId', (req, res) => {
+    try {
+        const { factorId } = req.params;
+        const result = db.deleteFactor(parseInt(factorId));
+        
+        if (result.changes > 0) {
+            res.json({
+                success: true,
+                factor_id: parseInt(factorId),
+                message: 'Factor deleted successfully'
+            });
+        } else {
+            res.status(404).json({ error: 'Factor not found' });
+        }
+    } catch (error) {
+        console.error('Error deleting factor:', error);
+        res.status(500).json({ error: 'Failed to delete factor' });
+    }
+});
 
 // --- Server Startup ---
 
